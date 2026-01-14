@@ -1,42 +1,54 @@
-name: PR Validation
+name: on-pr
 
 on:
   pull_request:
-    branches: [main]
+    branches:
+      - main
+    types:
+      - labeled
+      - opened
+      - reopened
+      - synchronize
+    paths:
+      - '.github/workflows/on-pr.yaml'
+      - '.gitops/**'
+      - 'apis/**'
+      - 'examples/**'
+      - 'tests/**'
+      - 'functions/**'
+      - 'upbound.yaml'
+
+permissions:
+  packages: write
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
 
 jobs:
   validate:
-    uses: unbounded-tech/github-actions/.github/workflows/xrd-validate.yaml@main
+    uses: unbounded-tech/workflows-crossplane/.github/workflows/validate.yaml@v2.13.0
     with:
-      composition-path: apis/qdrants/composition.yaml
-      definition-path: apis/qdrants/definition.yaml
-      examples: minimal standard
-      examples-path: examples/qdrants
+      examples: |
+        [
+          { "example": "examples/qdrants/minimal.yaml" },
+          { "example": "examples/qdrants/standard.yaml" }
+        ]
+      api_path: apis/qdrants
+      error_on_missing_schemas: true
 
   test:
-    uses: unbounded-tech/github-actions/.github/workflows/xrd-test.yaml@main
-    with:
-      tests-path: tests/test-render
+    uses: unbounded-tech/workflows-crossplane/.github/workflows/test.yaml@v2.13.0
 
   e2e:
-    needs: [validate, test]
-    uses: unbounded-tech/github-actions/.github/workflows/xrd-e2e.yaml@main
-    with:
-      tests-path: tests/e2etest-qdrant
-      aws-use-oidc: true
-      aws-account-id: ${{ vars.AWS_ACCOUNT_ID }}
-      aws-region: us-east-1
-    permissions:
-      id-token: write
-      contents: read
+    uses: unbounded-tech/workflows-crossplane/.github/workflows/e2e.yaml@v2.13.0
 
   publish:
-    needs: [validate, test]
-    uses: unbounded-tech/github-actions/.github/workflows/xrd-publish.yaml@main
+    needs:
+      - validate
+      - test
+      - e2e
+    uses: unbounded-tech/workflows-crossplane/.github/workflows/publish.yaml@v2.13.0
+    secrets: inherit
     with:
-      registry: ghcr.io
-      image-name: ${{ github.repository }}
-      tag: pr-${{ github.event.pull_request.number }}
-    secrets:
-      registry-username: ${{ github.actor }}
-      registry-password: ${{ secrets.GITHUB_TOKEN }}
+      tag: pr-${{ github.event.pull_request.number }}-${{ github.sha }}
