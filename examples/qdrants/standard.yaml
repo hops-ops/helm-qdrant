@@ -1,0 +1,18 @@
+apiVersion: helm.hops.ops.com.ai/v1alpha1
+kind: Qdrant
+metadata:
+  name: qdrant
+  namespace: example-env
+spec:
+  clusterName: my-cluster
+  namespace: qdrant
+  labels:
+    team: platform
+    environment: production
+  providerConfigRef:
+    name: my-cluster
+    kind: ProviderConfig
+  values:
+    replicaCount: 3
+    persistence:
+      size: 10Gi

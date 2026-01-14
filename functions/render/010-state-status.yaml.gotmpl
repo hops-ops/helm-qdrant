@@ -1,0 +1,16 @@
+{{- $observed := $.state.observed }}
+
+{{- /* Determine overall readiness */}}
+{{- $ready := $observed.helmRelease.ready }}
+
+{{- /* Build status */}}
+{{- $status := dict
+  "ready" $ready
+  "release" (dict
+    "name" $observed.helmRelease.name
+    "namespace" $observed.helmRelease.namespace
+    "ready" $observed.helmRelease.ready
+  )
+}}
+
+{{- $_ := set $.state "status" $status }}

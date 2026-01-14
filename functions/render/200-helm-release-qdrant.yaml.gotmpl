@@ -1,0 +1,36 @@
+{{- $state := $.state }}
+{{- $qdrant := $state.qdrant }}
+
+{{- /* Build Helm values */}}
+{{- $defaultValues := dict
+  "fullnameOverride" "qdrant"
+  "nameOverride" "qdrant"
+}}
+
+{{- $helmValues := dict }}
+{{- if $qdrant.overrideAllValues | len }}
+  {{- $helmValues = $qdrant.overrideAllValues }}
+{{- else }}
+  {{- $helmValues = mustMergeOverwrite $defaultValues $qdrant.values }}
+{{- end }}
+
+---
+apiVersion: helm.m.crossplane.io/v1beta1
+kind: Release
+metadata:
+  name: {{ $qdrant.name }}-helm-release
+  labels: {{ $qdrant.labels | toJson }}
+  annotations:
+    {{ setResourceNameAnnotation "helm-release" }}
+spec:
+  managementPolicies: {{ $qdrant.managementPolicies | toJson }}
+  providerConfigRef:
+    name: {{ $qdrant.providerConfigRef.name }}
+    kind: {{ $qdrant.providerConfigRef.kind }}
+  forProvider:
+    chart:
+      name: qdrant
+      repository: https://qdrant.github.io/qdrant-helm
+      version: "1.16.3" # renovate: chart=qdrant
+    namespace: {{ $qdrant.namespace }}
+    values: {{ $helmValues | toJson }}

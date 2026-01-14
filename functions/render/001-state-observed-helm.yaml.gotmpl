@@ -1,0 +1,22 @@
+{{- $observed := $.observed.resources | default dict }}
+
+{{- /* Extract helm release status */}}
+{{- $helmRelease := dict "ready" false "name" "" "namespace" "" }}
+{{- if index $observed "helm-release" }}
+  {{- $hr := index $observed "helm-release" }}
+  {{- if $hr.resource }}
+    {{- if $hr.resource.metadata }}
+      {{- $_ := set $helmRelease "name" ($hr.resource.metadata.name | default "") }}
+      {{- $_ := set $helmRelease "namespace" ($hr.resource.metadata.namespace | default "") }}
+    {{- end }}
+    {{- if $hr.resource.status }}
+      {{- if $hr.resource.status.atProvider }}
+        {{- $_ := set $helmRelease "ready" (eq ($hr.resource.status.atProvider.state | default "") "deployed") }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+
+{{- /* Set observed state */}}
+{{- $_ := set $.state "observed" dict }}
+{{- $_ = set $.state.observed "helmRelease" $helmRelease }}

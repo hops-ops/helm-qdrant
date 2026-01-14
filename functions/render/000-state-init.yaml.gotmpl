@@ -1,0 +1,48 @@
+{{- $spec := $.observed.composite.resource.spec }}
+{{- $metadata := $.observed.composite.resource.metadata }}
+{{- $name := $metadata.name }}
+
+{{- /* Provider config - defaults to clusterName if not specified */}}
+{{- $providerConfigName := $spec.clusterName }}
+{{- $providerConfigKind := "ProviderConfig" }}
+{{- if $spec.providerConfigRef }}
+  {{- $providerConfigName = $spec.providerConfigRef.name | default $providerConfigName }}
+  {{- $providerConfigKind = $spec.providerConfigRef.kind | default $providerConfigKind }}
+{{- end }}
+
+{{- /* Default labels */}}
+{{- $defaultLabels := dict
+  "hops.ops.com.ai/managed" "true"
+  "hops.ops.com.ai/qdrant" $name
+}}
+{{- $labels := mustMergeOverwrite $defaultLabels ($spec.labels | default dict) }}
+
+{{- /* Build raw spec (user inputs) */}}
+{{- $specRaw := dict
+  "name" $name
+  "namespace" ($spec.namespace | default "qdrant")
+  "clusterName" $spec.clusterName
+  "providerConfigRef" (dict "name" $providerConfigName "kind" $providerConfigKind)
+  "managementPolicies" ($spec.managementPolicies | default (list "*"))
+  "labels" ($spec.labels | default dict)
+  "values" ($spec.values | default dict)
+  "overrideAllValues" ($spec.overrideAllValues | default dict)
+}}
+
+{{- /* Build effective spec (with defaults applied) */}}
+{{- $specEffective := dict
+  "name" $name
+  "namespace" ($spec.namespace | default "qdrant")
+  "clusterName" $spec.clusterName
+  "providerConfigRef" (dict "name" $providerConfigName "kind" $providerConfigKind)
+  "managementPolicies" ($spec.managementPolicies | default (list "*"))
+  "labels" $labels
+  "values" ($spec.values | default dict)
+  "overrideAllValues" ($spec.overrideAllValues | default dict)
+}}
+
+{{- /* Initialize state */}}
+{{- $_ := set $ "state" dict }}
+{{- $_ = set $.state "spec" dict }}
+{{- $_ = set $.state.spec "raw" $specRaw }}
+{{- $_ = set $.state.spec "effective" $specEffective }}

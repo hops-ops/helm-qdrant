@@ -1,0 +1,15 @@
+{{- $effective := $.state.spec.effective }}
+
+{{- /* Build qdrant state for templates */}}
+{{- $qdrant := dict
+  "name" $effective.name
+  "namespace" $effective.namespace
+  "clusterName" $effective.clusterName
+  "providerConfigRef" $effective.providerConfigRef
+  "managementPolicies" $effective.managementPolicies
+  "labels" $effective.labels
+  "values" $effective.values
+  "overrideAllValues" $effective.overrideAllValues
+}}
+
+{{- $_ := set $.state "qdrant" $qdrant }}

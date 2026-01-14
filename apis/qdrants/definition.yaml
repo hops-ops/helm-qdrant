@@ -1,0 +1,79 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: qdrants.helm.hops.ops.com.ai
+spec:
+  group: helm.hops.ops.com.ai
+  names:
+    kind: Qdrant
+    plural: qdrants
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    served: true
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            required:
+            - clusterName
+            properties:
+              clusterName:
+                type: string
+                description: Name of the cluster for provider config reference.
+              namespace:
+                type: string
+                description: Namespace to deploy Qdrant into.
+                default: qdrant
+              labels:
+                type: object
+                description: Labels to apply to all Kubernetes resources.
+                x-kubernetes-preserve-unknown-fields: true
+              providerConfigRef:
+                type: object
+                description: Reference to the Helm provider config.
+                properties:
+                  name:
+                    type: string
+                    description: Name of the provider config.
+                  kind:
+                    type: string
+                    description: Kind of the provider config.
+                    default: ProviderConfig
+              managementPolicies:
+                type: array
+                description: Management policies for the resources.
+                default:
+                - '*'
+                items:
+                  type: string
+              values:
+                type: object
+                description: Helm values to merge with defaults.
+                x-kubernetes-preserve-unknown-fields: true
+              overrideAllValues:
+                type: object
+                description: Helm values that replace all defaults.
+                x-kubernetes-preserve-unknown-fields: true
+          status:
+            type: object
+            properties:
+              ready:
+                type: boolean
+                description: Whether the Qdrant deployment is ready.
+              release:
+                type: object
+                description: Status of the Helm release.
+                properties:
+                  name:
+                    type: string
+                    description: Name of the Helm release.
+                  namespace:
+                    type: string
+                    description: Namespace of the Helm release.
+                  ready:
+                    type: boolean
+                    description: Whether the Helm release is ready.

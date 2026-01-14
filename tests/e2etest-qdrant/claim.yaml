@@ -1,0 +1,8 @@
+apiVersion: helm.hops.ops.com.ai/v1alpha1
+kind: Qdrant
+metadata:
+  name: qdrant-e2e
+  namespace: default
+spec:
+  clusterName: e2e-test
+  namespace: qdrant

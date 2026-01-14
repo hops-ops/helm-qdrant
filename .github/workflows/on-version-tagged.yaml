@@ -1,0 +1,26 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+jobs:
+  publish:
+    uses: unbounded-tech/github-actions/.github/workflows/xrd-publish.yaml@main
+    with:
+      registry: ghcr.io
+      image-name: ${{ github.repository }}
+      tag: ${{ github.ref_name }}
+    secrets:
+      registry-username: ${{ github.actor }}
+      registry-password: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-latest:
+    uses: unbounded-tech/github-actions/.github/workflows/xrd-publish.yaml@main
+    with:
+      registry: ghcr.io
+      image-name: ${{ github.repository }}
+      tag: latest
+    secrets:
+      registry-username: ${{ github.actor }}
+      registry-password: ${{ secrets.GITHUB_TOKEN }}

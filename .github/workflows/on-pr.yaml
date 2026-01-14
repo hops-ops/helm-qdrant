@@ -1,0 +1,42 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    uses: unbounded-tech/github-actions/.github/workflows/xrd-validate.yaml@main
+    with:
+      composition-path: apis/qdrants/composition.yaml
+      definition-path: apis/qdrants/definition.yaml
+      examples: minimal standard
+      examples-path: examples/qdrants
+
+  test:
+    uses: unbounded-tech/github-actions/.github/workflows/xrd-test.yaml@main
+    with:
+      tests-path: tests/test-render
+
+  e2e:
+    needs: [validate, test]
+    uses: unbounded-tech/github-actions/.github/workflows/xrd-e2e.yaml@main
+    with:
+      tests-path: tests/e2etest-qdrant
+      aws-use-oidc: true
+      aws-account-id: ${{ vars.AWS_ACCOUNT_ID }}
+      aws-region: us-east-1
+    permissions:
+      id-token: write
+      contents: read
+
+  publish:
+    needs: [validate, test]
+    uses: unbounded-tech/github-actions/.github/workflows/xrd-publish.yaml@main
+    with:
+      registry: ghcr.io
+      image-name: ${{ github.repository }}
+      tag: pr-${{ github.event.pull_request.number }}
+    secrets:
+      registry-username: ${{ github.actor }}
+      registry-password: ${{ secrets.GITHUB_TOKEN }}
